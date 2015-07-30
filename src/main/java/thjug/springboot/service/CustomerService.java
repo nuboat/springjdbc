@@ -14,4 +14,6 @@ public interface CustomerService {
     public void update(final Customer customer);
 
     public void delete(final Long id);
+
+    public List<Customer> bulkCreate(final List<Customer> customers);
 }

@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,6 +14,9 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import thjug.springboot.entity.Customer;
 import thjug.springboot.service.CustomerService;
 
@@ -33,6 +37,9 @@ public class CustomerJdbcService implements CustomerService {
 
     private static final String DELETE =
         "DELETE customers WHERE id = ?";
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -79,6 +86,25 @@ public class CustomerJdbcService implements CustomerService {
     public void delete(final Long id) {
         final int count = jdbcTemplate.update(DELETE, id);
         assert count != 0;
+    }
+
+    @Override
+    public List<Customer> bulkCreate(final List<Customer> customers) {
+        final DefaultTransactionDefinition paramTransactionDefinition =
+                new DefaultTransactionDefinition();
+
+        final TransactionStatus status =
+                transactionManager.getTransaction(paramTransactionDefinition );
+
+        try{
+            final List<Customer> result = customers.stream().map(c -> create(c))
+                     .collect(Collectors.toList());
+            transactionManager.commit(status);
+            return result;
+        } catch (final RuntimeException e) {
+            transactionManager.rollback(status);
+            throw e;
+        }
     }
 
     /**

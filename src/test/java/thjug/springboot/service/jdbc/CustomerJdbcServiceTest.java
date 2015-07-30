@@ -34,7 +34,7 @@ public class CustomerJdbcServiceTest {
 
         jdbcTemplate.execute("DROP TABLE customers IF EXISTS");
         jdbcTemplate.execute("CREATE TABLE customers("
-            + "id SERIAL, first_name VARCHAR(255), last_name VARCHAR(255))");
+            + "id SERIAL, first_name VARCHAR(16), last_name VARCHAR(16))");
 
         // Split up the array of whole names into an array of first/last names
         final List<Object[]> splitUpNames =
@@ -104,6 +104,23 @@ public class CustomerJdbcServiceTest {
     @Test
     public void testDelete() {
         customerService.delete(1L);
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void testbulkCreate() {
+        final List<Customer> customers = Arrays.asList(
+                new Customer(null, "Bulk", "Create"),
+                new Customer(null, "BulkBulkBulkBulkBulkBulk", "Create"));
+
+        try {
+            customerService.bulkCreate(customers);
+        } catch (final Exception e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        } finally {
+            final List<Customer> c = customerService.queryByFirstname("Bulk");
+            log.info("List<Customer>: {} ", c.toString());
+        }
     }
 
 }
