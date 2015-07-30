@@ -3,7 +3,10 @@ package thjug.springboot.service.jdbc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import thjug.springboot.Application;
 import thjug.springboot.entity.Customer;
+import thjug.springboot.service.CustomerService;
 
 @Slf4j
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -21,8 +25,11 @@ public class CustomerJdbcServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Test
-    public void testQueryCustomerByFirstname() {
+    @Autowired
+    private CustomerService customerService;
+
+    @PostConstruct
+    public void createDB() {
         log.info("Creating tables");
 
         jdbcTemplate.execute("DROP TABLE customers IF EXISTS");
@@ -46,14 +53,25 @@ public class CustomerJdbcServiceTest {
         jdbcTemplate.batchUpdate(
                 "INSERT INTO customers(first_name, last_name) VALUES (?,?)",
                 splitUpNames);
+    }
 
+    @Test
+    public void testQueryCustomer() {
         log.info("Querying for customer records where first_name = 'Josh':");
         jdbcTemplate.query(
-                "SELECT id, first_name, last_name FROM customers WHERE first_name = ?",
-                new Object[]{"Josh"},
-                (rs, rowNum) -> new Customer(rs.getLong("id"),
+                "SELECT id, first_name, last_name FROM customers WHERE first_name = ?"
+                , new Object[]{"Josh"}
+                , (rs, rowNum) -> new Customer(rs.getLong("id"),
                         rs.getString("first_name"),
                         rs.getString("last_name"))
         ).forEach(customer -> log.info(customer.toString()));
+    }
+
+    @Test
+    public void testFindFirstnameJosh() {
+        final String name = "Josh";
+        final List<Customer> customers = customerService.queryByFirstname(name);
+
+        Assert.assertThat(customers.get(0).getFirstName(), Matchers.equalTo(name));
     }
 }
