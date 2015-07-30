@@ -6,4 +6,12 @@ import thjug.springboot.entity.Customer;
 public interface CustomerService {
 
     public List<Customer> queryByFirstname(final String firstName);
+
+    public Customer read(final Long id);
+
+    public Customer create(final Customer customer);
+
+    public void update(final Customer customer);
+
+    public void delete(final Long id);
 }

@@ -3,10 +3,10 @@ package thjug.springboot.service.jdbc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,30 +28,30 @@ public class CustomerJdbcServiceTest {
     @Autowired
     private CustomerService customerService;
 
-    @PostConstruct
+    @Before
     public void createDB() {
         log.info("Creating tables");
 
         jdbcTemplate.execute("DROP TABLE customers IF EXISTS");
         jdbcTemplate.execute("CREATE TABLE customers("
-                + "id SERIAL, first_name VARCHAR(255), last_name VARCHAR(255))");
+            + "id SERIAL, first_name VARCHAR(255), last_name VARCHAR(255))");
 
         // Split up the array of whole names into an array of first/last names
-        final List<Object[]> splitUpNames
-                = Arrays.asList("John Woo", "Jeff Dean", "Josh Bloch", "Josh Long")
-                .stream()
-                .map(name -> name.split(" "))
-                .collect(Collectors.toList());
+        final List<Object[]> splitUpNames =
+            Arrays.asList("John Woo", "Jeff Dean", "Josh Bloch", "Josh Long")
+            .stream()
+            .map(name -> name.split(" "))
+            .collect(Collectors.toList());
 
         // Use a Java 8 stream to print out each tuple of the list
-        splitUpNames.forEach(name -> log.info(
-                String.format("Inserting customer record for %s %s",
+        splitUpNames.forEach(name ->
+                log.info(String.format("Inserting customer record for %s %s",
                         name[0],
                         name[1])));
 
         // Uses JdbcTemplate's batchUpdate operation to bulk load data
         jdbcTemplate.batchUpdate(
-                "INSERT INTO customers(first_name, last_name) VALUES (?,?)",
+                "INSERT INTO customers(first_name, last_name) VALUES (?, ?)",
                 splitUpNames);
     }
 
@@ -61,9 +61,7 @@ public class CustomerJdbcServiceTest {
         jdbcTemplate.query(
                 "SELECT id, first_name, last_name FROM customers WHERE first_name = ?"
                 , new Object[]{"Josh"}
-                , (rs, rowNum) -> new Customer(rs.getLong("id"),
-                        rs.getString("first_name"),
-                        rs.getString("last_name"))
+                , (rs, rowNum) -> new Customer(rs.getLong("id"), rs.getString("first_name"), rs.getString("last_name"))
         ).forEach(customer -> log.info(customer.toString()));
     }
 
@@ -74,4 +72,38 @@ public class CustomerJdbcServiceTest {
 
         Assert.assertThat(customers.get(0).getFirstName(), Matchers.equalTo(name));
     }
+
+    @Test
+    public void testRead() {
+        final long id = 1L;
+        final Customer result = customerService.read(id);
+
+        log.info("Customer: {}", result.toString());
+
+        Assert.assertTrue(result.getId() == id);
+    }
+
+    @Test
+    public void testCreate() {
+        final Customer customer = new Customer(null, "Mickey", "Mouse");
+
+        final Customer result = customerService.create(customer);
+
+        log.info("Customer: {}", result.toString());
+
+        Assert.assertTrue(result.getId() != null);
+    }
+
+    @Test
+    public void testUpdate() {
+        final Customer customer = new Customer(1L, "Mickey", "Mouse II");
+
+        customerService.update(customer);
+    }
+
+    @Test
+    public void testDelete() {
+        customerService.delete(1L);
+    }
+
 }
