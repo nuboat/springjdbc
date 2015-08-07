@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import thjug.springboot.Application;
 import thjug.springboot.entity.Customer;
@@ -19,7 +19,7 @@ import thjug.springboot.service.CustomerService;
 
 @Slf4j
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = Application.class)
+@SpringApplicationConfiguration(classes = Application.class)
 public class CustomerJdbcServiceTest {
 
     @Autowired
@@ -32,7 +32,7 @@ public class CustomerJdbcServiceTest {
     public void createDB() {
         log.info("Creating tables");
 
-        jdbcTemplate.execute("DROP TABLE customers IF EXISTS");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS customers");
         jdbcTemplate.execute("CREATE TABLE customers("
             + "id SERIAL, first_name VARCHAR(16), last_name VARCHAR(16))");
 

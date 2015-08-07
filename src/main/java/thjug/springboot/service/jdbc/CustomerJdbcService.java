@@ -13,14 +13,14 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import thjug.springboot.entity.Customer;
 import thjug.springboot.service.CustomerService;
 
-@Component
+@Repository
 public class CustomerJdbcService implements CustomerService {
 
     private static final String QUERY_BY_ID =
@@ -36,7 +36,7 @@ public class CustomerJdbcService implements CustomerService {
         "UPDATE customers SET first_name = ?, last_name = ? WHERE id = ?";
 
     private static final String DELETE =
-        "DELETE customers WHERE id = ?";
+        "DELETE FROM customers WHERE id = ?";
 
     @Autowired
     private PlatformTransactionManager transactionManager;
